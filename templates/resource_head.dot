@@ -1,0 +1,9 @@
+# {{=data.resourceName}}
+
+{{=data.resourceObject.description}}
+
+{{?data.resourceObject.externalDocs && data.resourceObject.externalDocs.url}}
+<a href="{{=data.resourceObject.externalDocs.url}}">
+    {{=resource.externalDocs.description ? resource.externalDocs.description : 'External docs'}}
+</a>
+{{?}}

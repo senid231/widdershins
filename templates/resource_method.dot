@@ -1,0 +1,11 @@
+{{?data.subtitle != data.opName}}
+`{{=data.subtitle}}`
+
+{{?}}
+{{?data.opSummary}}
+*{{=data.opSummary}}*
+
+{{?}}
+{{?data.opDescription}}
+{{=data.opDescription}}
+{{?}}

@@ -16,7 +16,7 @@ var circles = [];
 
 // could change these to be regexes...
 var xmlContentTypes = ['application/xml','text/xml','image/svg+xml','application/rss+xml','application/rdf+xml','application/atom+xml','application/mathml+xml','application/hal+xml'];
-var jsonContentTypes = ['application/json','text/json','application/hal+json','application/ld+json','application/json-patch+json'];
+var jsonContentTypes = ['application/json','text/json','application/hal+json','application/ld+json','application/json-patch+json', 'application/vnd.api+json'];
 var yamlContentTypes = ['application/x-yaml','text/x-yaml'];
 
 /* originally from https://github.com/for-GET/know-your-http-well/blob/master/json/status-codes.json */
@@ -259,15 +259,14 @@ function convert(swagger,options) {
     var apiInfo = convertSwagger(swagger);
 
     for (var r in apiInfo.resources) {
-        content += '# '+r+'\n\n';
-        var resource = apiInfo.resources[r]
-        if (resource.description) content += resource.description+'\n\n';
-
-        if (resource.externalDocs) {
-            if (resource.externalDocs.url) {
-                content += '<a href="'+resource.externalDocs.url+'">'+(resource.externalDocs.description ? resource.externalDocs.description : 'External docs')+'</a>\n';
-            }
-        }
+        var resource = apiInfo.resources[r];
+        data.resourceName = r;
+    	data.resourceObject = resource;
+        data = options.templateCallback('resource_head','pre',data);
+        if (data.append) { content += data.append; delete data.append; }
+        content += templates.resource_head(data)+'\n';
+        data = options.templateCallback('resource_head','post',data);
+        if (data.append) { content += data.append; delete data.append; }
 
         for (var m in resource.methods) {
             var method = resource.methods[m];
@@ -276,7 +275,12 @@ function convert(swagger,options) {
             if (method.op != 'parameters') {
 
                 var opName = (op.operationId ? op.operationId : subtitle);
-                content += '## '+opName+'\n\n';
+                data.opName = opName;
+                data = options.templateCallback('resource_method_head','pre',data);
+                if (data.append) { content += data.append; delete data.append; }
+                content += templates.resource_method_head(data)+'\n';
+                data = options.templateCallback('resource_method_head','post',data);
+                if (data.append) { content += data.append; delete data.append; }
 
                 var url = (swagger.schemes ? swagger.schemes[0] : data.protocol)+'://'+data.host+(swagger.basePath ? swagger.basePath : '')+method.path;
                 var consumes = (op.consumes||[]).concat(swagger.consumes||[]);
@@ -468,9 +472,14 @@ function convert(swagger,options) {
                     }
                 }
 
-                if (subtitle != opName) content += '`'+subtitle+'`\n\n';
-                if (op.summary) content += '*'+op.summary+'*\n\n';
-                if (op.description) content += op.description+'\n\n';
+                data.subtitle = subtitle;
+                data.opSummary = op.summary;
+                data.opDescription = op.description;
+                data = options.templateCallback('resource_method','pre',data);
+                if (data.append) { content += data.append; delete data.append; }
+                content += templates.resource_method(data)+'\n';
+                data = options.templateCallback('resource_method','post',data);
+                if (data.append) { content += data.append; delete data.append; }
 
 				data.enums = [];
  
@@ -511,15 +520,13 @@ function convert(swagger,options) {
                     if (longDescs) {
                         for (var p in parameters) {
                             var param = parameters[p];
-                            //if (param["$ref"]) {
-                            //    param = jptr.jptr(swagger,param["$ref"]);
-                            //}
-                            var desc = param.description ? param.description : '';
-                            var descs = desc.trim().split('\n');
-                            if (descs.length > 1) {
-                                content += '##### '+param.name+'\n';
-                                content += desc + '\n';
-                            }
+                            data.paramName = param.name;
+                            data.paramDesc = desc;
+                            data = options.templateCallback('parameter_long_desc','pre',data);
+                            if (data.append) { content += data.append; delete data.append; }
+                            content += templates.parameter_long_desc(data)+'\n';
+                            data = options.templateCallback('parameter_long_desc','post',data);
+                            if (data.append) { content += data.append; delete data.append; }
                         }
                     }
 
