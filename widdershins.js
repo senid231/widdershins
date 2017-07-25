@@ -6,8 +6,6 @@ var path = require('path');
 
 var yaml = require('js-yaml');
 
-var converter = require('./index.js');
-
 var argv = require('yargs')
     .usage('widdershins [options] {input-spec} [[-o] output markdown]')
     .demand(1)
@@ -43,6 +41,8 @@ var argv = require('yargs')
 	.string('user_templates')
 	.alias('u','user_templates')
 	.describe('user_templates','directory to load override templates from')
+    .string('converter')
+    .describe('converter', 'path to override converter js file')
     .help('h')
     .alias('h', 'help')
     .version(function() {
@@ -72,6 +72,8 @@ options.discovery = argv.discovery;
 if (argv.search === false) options.search = false;
 if (argv.includes) options.includes = argv.includes.split(',');
 
+var converter_path = argv.converter ? path.resolve(argv.converter) : './index.js';
+var converter = require(converter_path);
 var output = converter.convert(swagger,options);
 
 var outfile = argv.outfile||argv._[1];
