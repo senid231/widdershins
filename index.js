@@ -178,6 +178,16 @@ function schemaJsonExample(examples, sample, mimeTypes) {
     return JSON.stringify(sample,null,2)+'\n';
 }
 
+function examplesForMimeType(examples, mimeTypes) {
+    var result = [];
+	Object.keys(examples).forEach(function(key) {
+		if (mimeTypes.includes(key)) {
+			result.push(examples[key]);
+		}
+	});
+    return result;
+}
+
 function convert(swagger,options) {
 
     var defaults = {};
@@ -620,6 +630,24 @@ function convert(swagger,options) {
                     if (url) response.meaning = '['+response.meaning+']('+url+')';
 					if (!response.description) response.description = 'No description';
 					response.description = response.description.trim();
+                    if (response.schema) {
+                        var obj = dereference(response.schema,swagger);
+                        if (Object.keys(obj).length>0) {
+                        	response.schemaObject = obj;
+                            if (options.sample) {
+                                try {
+                                	response.schemaSample = sampler.sample(obj); // skipReadOnly: false
+                                }
+                                catch (ex) {
+                                    console.log('# '+ex);
+                                }
+                            }
+                            if (response.examples && doContentType(produces,jsonContentTypes)) {
+                                response.exampleObjects = examplesForMimeType(response.examples, jsonContentTypes);
+							}
+
+                        }
+                    }
 					data.responses.push(response);
                 }
 				data = options.templateCallback('responses','pre',data);
