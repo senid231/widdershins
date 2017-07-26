@@ -165,6 +165,19 @@ function parameterToSchema(param,swagger) {
 	return schema;
 }
 
+function schemaJsonExample(examples, sample, mimeTypes) {
+    mimeTypes = mimeTypes.filter(function(item) { return jsonContentTypes.includes(item) });
+    if (examples) {
+        for (var m in mimeTypes) {
+            var example = examples[mimeTypes[m]];
+            if (example) {
+                return JSON.stringify(example,null,2);
+            }
+        }
+    }
+    return JSON.stringify(sample,null,2)+'\n';
+}
+
 function convert(swagger,options) {
 
     var defaults = {};
@@ -562,7 +575,7 @@ function convert(swagger,options) {
                             if (obj && obj.properties) obj = obj.properties;
                             if (doContentType(consumes,jsonContentTypes)) {
                                 content += '```json\n';
-                                content += JSON.stringify(obj,null,2)+'\n';
+                                content += schemaJsonExample(param['x-examples'], obj, consumes)+'\n';
                                 content += '```\n';
                             }
                             if (doContentType(consumes,yamlContentTypes)) {
@@ -593,11 +606,12 @@ function convert(swagger,options) {
                     if (response.schema) responseSchemas = true;
                     if (response.headers) responseHeaders = true;
 
-					response.status = resp;
+                    response.name = resp;
+					response.status = response['x-status'] || resp;
                     response.meaning = (resp == 'default' ? 'Default' :'Unknown');
                     var url = '';
                     for (var s in statusCodes) {
-                        if (statusCodes[s].code == resp) {
+                        if (statusCodes[s].code == response.status) {
                             response.meaning = statusCodes[s].phrase;
                             url = statusCodes[s].spec_href;
                             break;
@@ -659,8 +673,9 @@ function convert(swagger,options) {
                                 	}
                                 }
                                 if (doContentType(produces,jsonContentTypes)) {
+
                                     content += '```json\n';
-                                    content += JSON.stringify(obj,null,2)+'\n';
+                                    content += schemaJsonExample(response.examples, obj, produces)+'\n';
                                     content += '```\n';
                                 }
                                 if (doContentType(produces,yamlContentTypes)) {
