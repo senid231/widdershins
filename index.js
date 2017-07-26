@@ -188,6 +188,22 @@ function examplesForMimeType(examples, mimeTypes) {
     return result;
 }
 
+function schemaToProperties(schema) {
+	var result = [];
+	Object.keys(schema.properties || []).forEach(function(propName) {
+		var property = schema.properties[propName];
+		var prop = {name: propName, type: property.type};
+		prop.required = schema.required && schema.required.includes(propName);
+		if (property.description) prop.description = property.description;
+        if (property.default) prop.default = property.default;
+		if (property.type === 'object' && property.properties && property.properties.length > 0) {
+			prop.schema = schemaToProperties(property);
+		}
+		result.push(prop);
+	});
+	return result
+}
+
 function convert(swagger,options) {
 
     var defaults = {};
@@ -634,6 +650,7 @@ function convert(swagger,options) {
                         var obj = dereference(response.schema,swagger);
                         if (Object.keys(obj).length>0) {
                         	response.schemaObject = obj;
+                        	response.schemaParameters = schemaToProperties(obj);
                             if (options.sample) {
                                 try {
                                 	response.schemaSample = sampler.sample(obj); // skipReadOnly: false
