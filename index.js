@@ -650,11 +650,6 @@ function convert(swagger,options) {
                     }
 					data.responses.push(response);
                 }
-				data = options.templateCallback('responses','pre',data);
-				if (data.append) { content += data.append; delete data.append; }
-				content += templates.responses(data);
-				data = options.templateCallback('responses','post',data);
-				if (data.append) { content += data.append; delete data.append; }
 
                 if (responseHeaders) {
 					data.response_headers = [];
@@ -670,11 +665,6 @@ function convert(swagger,options) {
 							data.response_headers.push(hdr);
                         }
                     }
-					data = options.templateCallback('response_headers','pre',data);
-					content += templates.response_headers(data);
-					if (data.append) { content += data.append; delete data.append; }
-					data = options.templateCallback('response_headers','post',data);
-					if (data.append) { content += data.append; delete data.append; }
                 }
 
                 if (responseSchemas) {
@@ -724,6 +714,20 @@ function convert(swagger,options) {
                             }
                         }
                     }
+                }
+
+                data = options.templateCallback('responses','pre',data);
+                if (data.append) { content += data.append; delete data.append; }
+                content += templates.responses(data);
+                data = options.templateCallback('responses','post',data);
+                if (data.append) { content += data.append; delete data.append; }
+
+                if (responseHeaders) {
+                    data = options.templateCallback('response_headers','pre',data);
+                    content += templates.response_headers(data);
+                    if (data.append) { content += data.append; delete data.append; }
+                    data = options.templateCallback('response_headers','post',data);
+                    if (data.append) { content += data.append; delete data.append; }
                 }
 
                 var security = (op.security ? op.security : swagger.security);
